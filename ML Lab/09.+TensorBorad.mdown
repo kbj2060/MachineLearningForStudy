@@ -1,0 +1,54 @@
+# lec9-1: 딥넷트웍 학습 시키기(backpropagation)
+-------------------------------------
+이번 강의에서는 w1,w2,b1,b2를 어떻게 학습시킬수 있을까에 대해 알아보자.
+딥러닝에서도 gradient descent같은 cost function을 이용한다.
+gradient descent를 이용하려면 모든 노드의 미분값을 알아야한다.
+하지만 모든 노드를 계산하려면 너무 복잡하다.
+그래서 backpropagation이라는 개념이 나온다.
+
+![s](https://3.bp.blogspot.com/-uw2aoDcx6x0/V7HCQn_VT8I/AAAAAAAAIAg/HqF_dztX9-AFKo-BCA0n25I_uNCGW1_iACK4B/s400/ScreenShot_20160812235353.png)
+
+위와 같이 미분값을 넘기면서 chain rule을 통해 각 노드의 미분 값을 쉽게 알 수 있다.
+
+![s](https://4.bp.blogspot.com/-y28Z_YnOcvs/V7HU3kge_eI/AAAAAAAAIAw/DXYzRrI81X8-d048h9uiPGkOU2YqCIFFQCK4B/s400/ScreenShot_20160812235353.png)
+
+텐서플로우의 텐서보드는 위 그래프처럼 노드들을 만들어 backpropagation을 보다 쉽게 구현할 수 있도록 만들어놨다.
+
+# lec9-2: Tensor Board로 딥네트웍 들여다보기
+----------------------------------------------
+텐서보드로 그래프 형태로 코드를 들여다 볼 수 있다. 
+네트워크가 커지고 수행 시간이 오래 걸리다 보면 에러 찾기가 힘들다.
+텐서플로우는 텐서보드라는 해결책을 제시한다.
+사용법은 간단하다. 
+
+![s](https://2.bp.blogspot.com/-QyrKqW-QUPI/V7Ld7vGXQuI/AAAAAAAAIBE/A3iH8OonlJwMvLdYUcO4cfZ5riIzP3FTACK4B/s400/ScreenShot_20160811153954.png)
+
+위와 같은 예시를 통해 간단한 사용법을 알 수 있다.
+우선 summary 정보들을 모아 writer를 생성한뒤 writer operation을 실행시키는 것이다.
+그리고 텐서보드를 실행시킨다.
+
+![s](https://2.bp.blogspot.com/-4DmoCuiv3GA/V7LeoNMh50I/AAAAAAAAIBM/c2oCw2pX0doYusKtIeYfYEcWMP_LeZTXwCK4B/s400/ScreenShot_20160811153954.png)
+
+위처럼 layer별로 분류하여 코딩을 하는 것이 좋다. 
+그리고 변수에 labeling을 하는 것이 중요하다.
+
+![s](https://3.bp.blogspot.com/-Z-kwzj8wZ6Y/V7Le93Y3K1I/AAAAAAAAIBU/DZ9DiGv3Fy4PxgEgoOy109Tq3OXCj2-GQCK4B/s400/ScreenShot_20160811153954.png)
+
+모든 summary를 합치고 summarywriter을 실행시킨다.
+
+![s](https://1.bp.blogspot.com/-VJcHvMzwuRg/V7LfZ2IBMyI/AAAAAAAAIBc/xczYHky98TgoWXhvEJKBPWEcFTEqF6sUgCK4B/s400/ScreenShot_20160811153954.png)
+
+마지막으로 세션을 실행시키면서 텐서보드에 출력시킨다.
+텐서플로우는 그래프화시켜서 backpropagation이 수월하도록 만들었다.
+
+![s](https://4.bp.blogspot.com/-I45AkrNy9bo/V7LgA-vsWTI/AAAAAAAAIBk/RkIvioF1gAEfXlK86eiIPLFFqpNgUCu9wCK4B/s400/ScreenShot_20160811153954.png)
+
+또한 변수의 히스토그램을 그래프로 볼 수 있는 장점이 있다.
+디버깅이라고 하기엔 굉장히 좋은 툴이다.
+수치로 표현하는 것이 아니라 시각적으로 표현하면서 한 눈에 알 수 있도록 만들었다.
+
+![s](https://1.bp.blogspot.com/-P8VUtQ89Hpo/V7R20P_SMLI/AAAAAAAAIB4/7DF0-jT8BQ48ewH7ooa0wdwJh_EsQxBQACK4B/s400/graph_run%253D.png)
+
+# Reference
+----------------------------------------------------------
+* https://www.youtube.com/user/hunkims/playlists

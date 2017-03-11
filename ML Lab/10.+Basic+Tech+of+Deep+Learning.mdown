@@ -1,0 +1,128 @@
+# lec10-1: Sigmoid 보다 ReLU
+-------------------------------------------------
+전에 공부했던 것을 정리하자면, activation function은 값이 다음 레이어로 넘어갈 때 범위 안의 값으로 변환시켜주는 함수이다. 
+
+![s](https://4.bp.blogspot.com/-JJZ_aD4NQSc/V7R-xPDV4HI/AAAAAAAAICI/aqW92__BdL8x9-wRuOMRqDKZZXCFohEuwCK4B/s400/ScreenShot_20160812235353.png)
+
+위와 같이 sigmoid 함수로 다음 레이어에 값을 넘겨주는 것을 알 수 있다.
+위 그림처럼 한 개의 x만 입력 값을 받는 것이 아니라 여러 값을 받을 수도 있다.
+
+![s](https://3.bp.blogspot.com/-JpRuNAgj80w/V7R_eyXdZPI/AAAAAAAAICQ/aZxOvQIKWmImwRYtxnyM06aFxoROw8j0ACK4B/s400/ScreenShot_20160812235353.png)
+
+위 그림처럼 3개의 레이어를 만들어 한개의 input layer,output layer, hidden layer로 설정할 수 있다.  
+레이어에서 다음 레이어로 넘어갈 때 활성화 함수를 거쳐서 값을 변환시킨 뒤 넘겨야한다.
+그러나 전 layer의 output 갯수와 다음 layer의 input 갯수는 맞추어야 한다.
+이러한 과정을 tensorboard로 나타내려면 아래와 같은 코드를 써야한다.
+
+![s](https://2.bp.blogspot.com/-xIkBYgDcDX8/V7SAMEk7QoI/AAAAAAAAICc/Hh1MEDrFqTo1JLKnPqmBrgCLHq3_ZBWcwCK4B/s400/ScreenShot_20160812235353.png)
+
+텐서보드로 보면 코드로 보는 것보다 훨씬 직관적이고 이해하기 쉽다.
+마지막으로 sigmoid를 이용해 결과를 출력해보면 아래와 같은 낮은 정확도를 보인다.
+
+![s](https://3.bp.blogspot.com/-a2eNftZ2qR4/V7SAhUQHB9I/AAAAAAAAICk/zHxOTn2R8moVPfAQOl6zOhfo7Z0aqR6iwCK4B/s400/ScreenShot_20160812235353.png)
+
+낮은 정확도를 보이는 이유를 분석해보자.
+sigmoid는 양의 정수가 커지면 커질수록 최대 1로 다가가기 때문에 1보다 작은 값들을 곱해나가다보니 너무 작은 수가 되버린다.
+그래서 나온 활성화 함수가 ReLU이다.
+ReLU의 그래프는 아래와 같다.
+
+![s](https://4.bp.blogspot.com/-JeinS0FRkHM/V7SBmygqg9I/AAAAAAAAICw/358wzhSaTaMw3V1rFP1SWXf3PC6ccY8fgCK4B/s400/ScreenShot_20160812235353.png)
+
+양의 정수가 커지면 커질수록 더 큰 값을 갖게되는 함수를 만들었다.
+그리고 sigmoid 대신에 ReLU 함수를 써보면 코드는 아래와 같다.
+
+![s](https://2.bp.blogspot.com/-5gL197QtDVE/V7SB4ZoGe6I/AAAAAAAAIC4/DQeNCdytB1oSgSO-7L1ZJuJgcSQWEp27QCK4B/s400/ScreenShot_20160812235353.png)
+
+마지막에는 digmoid 함수를 쓴다. 왜냐하면 입력을 받을 때 0과 1 사이의 값으로 받기 때문이다.
+
+![s](https://3.bp.blogspot.com/-rkedE7Z2o8c/V7SCNHrMLII/AAAAAAAAIDE/RRkOL5hcAHoUTT5xDkAKZNOBdmhDNYtBgCK4B/s400/ScreenShot_20160812235353.png)
+
+ReLU를 쓰고 정확도를 체크해보니 100프로가 나온 것을 알 수 있다.
+ReLU 말고도 아래와 같이 더 많은 활성화 함수가 존재한다.
+
+![s](https://3.bp.blogspot.com/-W6NF105pyWA/V7SCdmo6QlI/AAAAAAAAIDM/blXjBPfyY7IjhYvnZDasH37BBuNuav1xwCK4B/s400/ScreenShot_20160812235353.png)
+
+# lec10-2: Weight 초기화
+-------------------------------------
+![s](https://1.bp.blogspot.com/-gd2hk5Wyt38/V7Vsm7fWItI/AAAAAAAAIDg/4wjeUSyfaYoZy16xdO349l_uHSIv1q_UACK4B/s400/ScreenShot_20160811153954.png)
+
+위 문제는 layer가 점점 많아질수록 정확도가 떨어지는 문제였다.
+문제를 해결하기 위해 2가지 해결법이 있다.
+첫번째는 10-1에서 공부한 ReLU가 있었다.
+이번에는 weight 의 초기화를 잘해서 해결하는 방법이 있다.
+
+![s](https://2.bp.blogspot.com/-qh62cFk-Sss/V7VtL6PL4MI/AAAAAAAAIDo/4BI5kgCsQzc-OLytylUfVx9vHhIOEY1uACK4B/s400/ScreenShot_20160811153954.png)
+
+모든 weight의 초기값을 0으로 두지 말고 Hinton 교수가 제시한 RBM을 사용하는 것이 초기값을 잘 설정하는 것이라고 한다.
+하지만 요즘은 RBM은 잘 사용하지 않는다고 한다.
+RBM은 설명하지 않고 아래의 내용으로 대체한다.
+
+![s](https://2.bp.blogspot.com/-9J7ceQN8g2A/V7Vu78y31PI/AAAAAAAAID4/enrJD60hXvYv9dmpFCepQhcnIbmKiyEuQCK4B/s400/ScreenShot_20160811153954.png)
+
+RBM보다 덜 복잡한 Xavier initialization 과 He's initialization 가 나온다.
+
+![s](https://1.bp.blogspot.com/-VMPTKKprIPw/V7VvqVoU7FI/AAAAAAAAIEA/_ShISNvl87cClAKsjwRSK2Ri3AlLzBWZgCK4B/s400/ScreenShot_20160811153954.png)
+
+이제 Hinton 교수가 발견 아래 2가지를 배웠다.
+첫째는 ReLU고 두번째는 weight 의 좋은 초기값이다.
+
+# lec10-3: Dropout 과 앙상블
+-----------------------------------
+![s](https://1.bp.blogspot.com/-HA5nF8rc39g/V7Vwr5ECtMI/AAAAAAAAIEQ/VDCtPOALrkYa6yLz5JFVK9pD99Mz9joSwCK4B/s400/ScreenShot_20160811153954.png)
+
+이번에는 overfitting의 해결책에 대해 공부해보자.
+
+1. 더 많은 데이터
+2. features의 수 감소
+3. 정규화
+
+1번은 당연한 것이고 2번은 딥러닝에서 굳이 필요한 해결책은 아니다.
+마지막으로 3번에 대해 공부해보고자 한다.
+
+![s](https://3.bp.blogspot.com/-ysr5WhxGcUA/V7VxMaQSuVI/AAAAAAAAIEY/OIqHiDFCSEkpPI6BhIP5wsM_JevvhP9MACK4B/s400/ScreenShot_20160811153954.png)
+
+정규화는 코세라에서도 배웠었다. 
+위 그림은 L2 Regularization이다. 람다를 통해 정규화의 정도를 조절할 수 있다.
+하지만 딥러닝에서는 아주 신기한 정규화가 자주 쓰인다.
+바로 드랍 아웃이다.
+
+![s](https://4.bp.blogspot.com/-PmUJZ8gn5G8/V7VxjhBa_XI/AAAAAAAAIEk/CTdahkiHDkM7J3RRVd468dCuwmz5UeRJACK4B/s400/ScreenShot_20160811153954.png)
+
+위 방법은 랜덤하게 훈련시키는 것이다.
+각각 뉴런들은 어느 분야에서 전문가들인데 훈련시킬 때 랜덤하게 학습을 덜 시킨다.
+그리고 마지막으로 모든 분야의 전문가들이 회의를 통해 결과를 출력한다.
+
+![s](https://3.bp.blogspot.com/-DXSk-4a_HXU/V7VyDSo6roI/AAAAAAAAIEw/RrSgQ1MEzrUFZkuHaolnFe0Szr74IdYkQCK4B/s400/ScreenShot_20160811153954.png)
+
+위 내용을 코드로 작성하면 위와 같은데 주의할 점이 dropout rate 이다.
+트레이닝할 때는 rate를 0.7로 두지만 평가할 때는 1로 두어야한다.
+위에서 언급했듯이 모든 분야의 전문가들이 회의를 통해 마지막에 결과를 내는 것이다.
+
+![s](https://1.bp.blogspot.com/-g1LtomM3THA/V7Vyin4LRjI/AAAAAAAAIE8/DadL88uZ7SMqBP9-NEDXz8Rdo2pRaxjEgCK4B/s400/ScreenShot_20160811153954.png)
+
+위 앙상블은 정확도를 3%까지도 상승시킨다고 한다.
+
+# lec10-4: 레고처럼 넷트웍 모듈을 마음껏 쌓아 보자
+--------------------------------------------
+![s](https://2.bp.blogspot.com/-I2nGQPVEgTo/V7VzMB462EI/AAAAAAAAIFI/ORuFCPk3OPY_l2NIf1bliU43Z51SESXOwCK4B/s400/ScreenShot_20160811153954.png)
+
+딥러닝은 레이어를 레고처럼 마음대로 조정할 수 있는데
+imagenet의 정확도를 97프로까지 올린 fast forward 방법이 있다.
+텐서를 다음 레이어에 가져가는 것이 아니라 마음대로 더 앞에 줘버리는 것이다.
+
+![s](https://1.bp.blogspot.com/-0OFMJ5V41ic/V7Vzq2mWtsI/AAAAAAAAIFU/U-gb-MwgZl4utTLV-Lf-7JZq2E5KvumDgCK4B/s400/ScreenShot_20160811153954.png)
+
+위 방법처럼 쪼개고 합치는 방법도 존재한다. 
+이 방법이 발전된게 CNN이다.
+
+![s](https://3.bp.blogspot.com/-xjoSqneCnZY/V7V0AJXX9uI/AAAAAAAAIFg/rwifC6jTm009LzhRoTESHvoIb_4r8-vLgCK4B/s400/ScreenShot_20160811153954.png)
+
+텐서가 앞으로만 나가는 것이 아니라 옆으로 나아가는 방법이 발전된게 RNN 이다.
+
+위 방법들은 이미 존재하는 것들이다.
+레이어를 어떻게 쓰고 텐서를 어디로 보내는 가는 유저의 마음이다.
+그러므로 딥러닝의 한계는 유저의 상상력이다.
+
+# Reference
+----------------------------------------------------------
+* https://www.youtube.com/user/hunkims/playlists

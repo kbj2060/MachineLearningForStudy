@@ -1,0 +1,134 @@
+# TensorBoard : Convolutional Neural Network
+---------------------------------------------------
+이번에는 cnn을 텐서보드에 나타내는 것을 공부해보겠다.
+cnn에서도 MNIST 예제를 사용하겠다.
+하지만 cnn은 컴퓨터에서 너무 느리게 학습되므로 나중에 AWS로 다시 해볼 예정이다.
+
+```python
+import tensorflow as tf
+import numpy as np
+import input_data
+
+batch_size = 128
+test_size = 256
+
+def init_weights(shape,name):
+    return tf.Variable(tf.random_normal(shape, stddev=0.01),name=name)
+
+def model(X, w, w2, w3, w4, w_o, p_keep_conv, p_keep_hidden):
+    with tf.name_scope("layer1") as scope:
+        l1a = tf.nn.relu(tf.nn.conv2d(X, w,                       # l1a shape=(?, 28, 28, 32)
+                            strides=[1, 1, 1, 1], padding='SAME'))
+        l1 = tf.nn.max_pool(l1a, ksize=[1, 2, 2, 1],              # l1 shape=(?, 14, 14, 32)
+                            strides=[1, 2, 2, 1], padding='SAME')
+        l1 = tf.nn.dropout(l1, p_keep_conv)
+    with tf.name_scope("layer2") as scope:
+        l2a = tf.nn.relu(tf.nn.conv2d(l1, w2,                     # l2a shape=(?, 14, 14, 64)
+                            strides=[1, 1, 1, 1], padding='SAME'))
+        l2 = tf.nn.max_pool(l2a, ksize=[1, 2, 2, 1],              # l2 shape=(?, 7, 7, 64)
+                            strides=[1, 2, 2, 1], padding='SAME')
+        l2 = tf.nn.dropout(l2, p_keep_conv)
+    with tf.name_scope("layer3") as scope:
+        l3a = tf.nn.relu(tf.nn.conv2d(l2, w3,                     # l3a shape=(?, 7, 7, 128)
+                            strides=[1, 1, 1, 1], padding='SAME'))
+        l3 = tf.nn.max_pool(l3a, ksize=[1, 2, 2, 1],              # l3 shape=(?, 4, 4, 128)
+                            strides=[1, 2, 2, 1], padding='SAME')
+        l3 = tf.reshape(l3, [-1, w4.get_shape().as_list()[0]])    # reshape to (?, 2048)
+        l3 = tf.nn.dropout(l3, p_keep_conv)
+    with tf.name_scope("layer4") as scope:
+        l4 = tf.nn.relu(tf.matmul(l3, w4))
+        l4 = tf.nn.dropout(l4, p_keep_hidden)
+        pyx = tf.matmul(l4, w_o)
+        return pyx
+
+mnist = input_data.read_data_sets("MNIST_data/", one_hot=True)
+trX, trY, teX, teY = mnist.train.images, mnist.train.labels, mnist.test.images, mnist.test.labels
+trX = trX.reshape(-1, 28, 28, 1)  # 28x28x1 input img
+teX = teX.reshape(-1, 28, 28, 1)  # 28x28x1 input img
+
+X = tf.placeholder("float", [None, 28, 28, 1], name="X")
+Y = tf.placeholder("float", [None, 10], name="Y")
+
+w = init_weights([3, 3, 1, 32],"w")       # 3x3x1 conv, 32 outputs
+w2 = init_weights([3, 3, 32, 64],"w2")     # 3x3x32 conv, 64 outputs
+w3 = init_weights([3, 3, 64, 128],"w3")    # 3x3x32 conv, 128 outputs
+w4 = init_weights([128 * 4 * 4, 625],"w4") # 128의 필터에 4 * 4 이미지
+w_o = init_weights([625, 10],"w_o")         # FC 625 inputs, 10 outputs (labels)
+
+w_summ = tf.histogram_summary("w_summ",w)
+w2_summ = tf.histogram_summary("w2_summ",w2)
+w3_summ = tf.histogram_summary("w3_summ",w3)
+w4_summ = tf.histogram_summary("w4_summ",w4)
+wo_summ = tf.histogram_summary("wo_summ",w_o)
+
+p_keep_conv = tf.placeholder("float", name="p_keep_conv")
+p_keep_hidden = tf.placeholder("float", name="p_keep_hidden")
+py_x = model(X, w, w2, w3, w4, w_o, p_keep_conv, p_keep_hidden)
+
+with tf.name_scope("cost") as scope:
+    cost = tf.reduce_mean(tf.nn.softmax_cross_entropy_with_logits(py_x, Y))
+    train_op = tf.train.RMSPropOptimizer(0.001, 0.9).minimize(cost)
+    cost_summ = tf.scalar_summary("cost",cost)
+
+with tf.name_scope("accuracy") as scope:
+    correct_pred = tf.equal(tf.argmax(Y, 1), tf.argmax(py_x, 1))  # Count correct predictions
+    acc_op = tf.reduce_mean(tf.cast(correct_pred, "float"))  # Cast boolean to float to average
+    # Add scalar summary for accuracy
+    acc_summ = tf.scalar_summary("accuracy", acc_op)
+    predict_op = tf.argmax(py_x, 1)
+
+# Launch the graph in a session
+with tf.Session() as sess:
+
+    tf.initialize_all_variables().run()
+    writer = tf.train.SummaryWriter("./logs/cnn_logs", sess.graph)
+    merged = tf.merge_all_summaries()
+
+    for i in range(5):
+        training_batch = zip(range(0, len(trX), batch_size),
+                             range(batch_size, len(trX), batch_size))
+
+        for start, end in training_batch:
+            sess.run(train_op, feed_dict={X: trX[start:end], Y: trY[start:end],
+                                          p_keep_conv: 0.8, p_keep_hidden: 0.5})
+
+            #print(sess.run(cost, feed_dict={X: trX[start:end], Y: trY[start:end],
+                                            #p_keep_conv: 0.8, p_keep_hidden: 0.5}))
+
+        test_indices = np.arange(len(teX)) # Get A Test Batch
+        np.random.shuffle(test_indices)
+        test_indices = test_indices[0:test_size]
+        summary, acc = sess.run([merged,predict_op], feed_dict={X: teX[test_indices],
+                                        Y: teY[test_indices],
+                                        p_keep_conv: 1.0,
+                                        p_keep_hidden: 1.0})
+        writer.add_summary(summary, i)
+        print(i, "test_acc: %f" % np.mean(np.argmax(teY[test_indices], axis=1) == acc))
+```
+이 코드는 cnn 예제 코드에서 텐서보드에 맞게 수정했다.
+
+##Scalar Graph
+![s](https://1.bp.blogspot.com/-AUsLAZEkHdg/V7q6pMCA4SI/AAAAAAAAILk/aKc4aAxtnQUMOXS2yfe0Zs9YQv8ZV9SvACK4B/s400/cnn_scalar.png)
+
+이전의 게시글은 nn에 대해 공부했을 때와 마찬가지로 cost 와 acc를 scalar_summary 를 통해 텐서보드에 나타냈다.
+
+## Graph
+![s](https://1.bp.blogspot.com/-fneyaDhzgHA/V7q6pc6bdBI/AAAAAAAAIME/nF2a6i0Q4TA_i_JkDABFcasQ2NYPgL-4wCK4B/s400/cnn_graph.png)
+
+nn와 비교하면 꽤 복잡한 그래프이다. Fully Connected는 사용하지 않고 앞의 3개 레이어는 convolution을 실행하고 dropout과 ReLU를 실행했다. 마지막 4번째 레이어는 convolution을 실행하지 않았다.
+
+자세한 레이어의 연산은 아래와 같다. 하지만 잘 보이지 않는다..
+
+![s](https://1.bp.blogspot.com/-IqGNdPlKxTw/V7q6pXRr4wI/AAAAAAAAIL0/BpqTN3Jm0xMvcfHIDALG-bG2HmsRvvSMgCK4B/s400/cnn_graph_big.PNG)
+
+## weight histogram
+![s](https://1.bp.blogspot.com/-d8mUftVS2iE/V7q6pbdjJNI/AAAAAAAAILw/2bDKuXS1IwMshIPS_5bnrilE6n4aD9wFACK4B/s400/cnn_weights.PNG)
+
+위와 같이 weight의 크기 변화를 히스토그램으로 표현도 가능하다.
+하지만 scalar로 표현하는 것이 더 직관적인 것 같다..
+
+![s](https://1.bp.blogspot.com/-jvcvPlxmR9c/V7q6pQR3nFI/AAAAAAAAIMA/fJ9LahyjkwwF8rfr2HssHtcRl0VDfAV8ACK4B/s320/ScreenShot_20160812235353.png)
+
+코드를 실행시켜 보면 5번만으로도 높은 정확도를 보인다.
+cpu의 한계를 nn에서 못 느꼈지만 cnn에서 느꼈다.
+다음에는 AWS를 이용해 gpu를 사용해봐야겠다.

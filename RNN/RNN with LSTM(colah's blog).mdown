@@ -1,0 +1,140 @@
+이 글은 [Understanding LSTM Networks](http://colah.github.io/posts/2015-08-Understanding-LSTMs/)블로그 포스트를 번역하고 공부한 내용입니다.
+
+
+# Recurrent Neural Network
+----------------------------------------------
+사람은 처음부터 매 순간 생각하지 않습니다. 이 에세이를 읽을 때, 이전의 단어에 대한 이해를 바탕으로 각각의 단어들을 이해합니다. 사람들은 생각을 처음부터 시작하지 않고 이전의 것들을 모두 버리고 생각하지 않습니다. 즉, 사람들의 생각은 지속성을 지닙니다.
+
+기존의 뉴럴 네트워크는 할 수 없었고, 그것이 가장 큰 단점인 것 같았습니다. 예를 들어, 영화에서 발생하는 모든 상황들을 순간마다 분류한다고 상상해봅시다. 기존의 뉴럴 네트워크는 어떻게 자신의 추론을 이용해 이전의 사건들로 다음 사건들을 알릴 지 불명확합니다.
+
+순환 신경망을 이 문제를 풀어냅니다. 순환 신경망은 자신에게로 돌아오는 반복 네트워크를 갖고 있으며 그것이 정보를 계속 유지시켜줍니다.
+
+![a](https://2.bp.blogspot.com/-ED3JBYm2PSc/V72Q36hD5MI/AAAAAAAAIM4/BTzY69okHWQ4ygfan7jeNCwHwU0CF5oaACK4B/s640/ScreenShot_20160824211928.png)
+
+위 그림에서 뉴럴 네트워크의 덩어리 A, input으로 보이는 Xt 와 output 값인 ht를 볼 수 있습니다. 반복은 정보가 다음 네트워크를 넘어가도록 합니다.
+
+반복들은 RNN을 미스테리하게 만듭니다. 그러나 , 좀 더 생각해본다면, 평범한 신경망과 크게 다를 게 없다고 판명납니다. RNN은 후손 노드에게 메시지를 넘기는 네트워크들의 여러 복사본들이라고 생각되어질 수 있습니다. 반복을 펼쳐보면 어떤 일이 생길 지 생각해봅시다.
+
+![s](https://2.bp.blogspot.com/-PT1WdiZ6k4w/V72TGmpYaGI/AAAAAAAAINE/GmHrR7EY2Z4vfshFzScAy-sQ4wZ4IuE6wCK4B/s640/ScreenShot_20160824211928.png)
+
+연결되어 있는 노드들은 RNN이 sequence(순서) 와 lists(배열)에 직접적으로 관련되어 있다는 것을 드러냅니다. RNN은 저런 데이터를 위한 자연적인 구조입니다. 즉, RNN 구조는 이전의 데이터를 바탕으로 학습해야하는 데이터를 위한 인간 뇌 신경망의 자연적인 메카니즘이라는 말입니다.
+
+몇 년전부터 RNN은 음성인식, 언어 모델링, 번역, 이미지 캡셔닝 등 많은 문제에 적용되어 엄청난 성과를 냈습니다. [The Unreasonable Effectiveness of Recurrent Neural Networks](http://karpathy.github.io/2015/05/21/rnn-effectiveness/) 은 RNN을 활용한 훌륭한 블로그 포스트입니다.
+
+위와 같은 성공의 필수 요소는 LSTM 입니다. LSTM은 기존 RNN보다 월등히 좋은 RNN의 특별한 유형입니다. 거의 모든 RNN 기반의 흥미로운 결과는 LSTM을 사용했습니다.
+
+# The Problem of Long-Term Dependencies
+-------------------------------------------------
+RNN의 매력 중 하나는 RNN이 이전의 정보와 현재 task가 연결되어 있다는 것입니다. 예를 들면, 이전의 비디오 프레임이 현재 프레임의 이해를 돕습니다. RNN이 이와 같은 일을 해낸다면 정말 유용할 것입니다. 하지만 상황에 따라 다릅니다.
+
+때때로 우리는 최근 정보를 보고 현재 task를 수행해야할 필요가 있습니다. 이전의 단어들로 다음 단어를 에측하는 language modeling을 예로 들 수 있습니다.
+
+![a](https://1.bp.blogspot.com/-QGaNh5uZW7c/V72dpBHRuaI/AAAAAAAAINU/08D8euN4iZEeNu6gB3k_eAjFXS0v50dPACK4B/s640/ScreenShot_20160824211928.png)
+
+"I grew up in France. I speak fluent French." 라는 텍스트에서 마지막 단어를 추론해보겠습니다.. 최근의 정보는 다음 단어는 아마 언어의 이름이라고 제안하지만, 우리는 더 자세하게 어떤 언어인지 이전 문장의 맥락으로부터 알고 싶습니다. 추론하고자 하는 단어와 관련된 정보의 간격이 위 언어의 이름을 추론하는 것을 가능케 합니다.
+
+불운하게도, 그 간격이 커질수록 RNN은 정보를 연결하며 학습할 수 없게 됩니다.
+
+![a](https://2.bp.blogspot.com/-jj4XMI7GSwI/V72kELNeAiI/AAAAAAAAINk/N6Ou2Tn9uMImVVNUGudTYGHHX8tofkSCgCK4B/s640/ScreenShot_20160824211928.png)
+
+이론적으로, RNN은 "long-term dependencies"를 완벽히 다룰 수 있습니다. 인간은 이 형식의 간단한 문제를 풀기 위해 신중하게 파라미터를 고릅니다. 슬프게도, 현실에서는 RNN 학습하지 못하는 것 같습니다. 여러 논문이 기존 RNN은 "long-term dependencies" 문제를 풀 수 없음을 증명합니다.
+
+감사하게도, LSTM은 "long-term dependencies" 문제가 생기지 않습니다.
+
+# LSTM Networks
+---------------------------------------------------
+Long Short Term Memory(LSTM)는 long-term dependencies 학습이 가능한 RNN의 특별한 유형입니다. LSTM은 다양한 분야에서 뛰어난 성과르 보이며 많이들 사용합니다.
+
+LSTM은 명백히 long-term dependencies를 피하기 위해 디자인되었습니다. 긴 기간동안 정보를 기억하는 것은 기본적인 행위입니다. 학습하기 어려운 것이 아닙니다!
+
+모든 RNN은 뉴럴 네트워크를 반복하는 모듈의 연속이라는 형식을 가집니다. 평범한 RNN에서 이 반복 모듈은 하나의 tanh와 같은 매우 단순한 구조를 가질 것입니다.
+
+![a](https://3.bp.blogspot.com/-birWjxd8ibw/V72oC0NspVI/AAAAAAAAINw/8Y9in8NSt2UibbnCeVSOr-NTwn9hvjVOACK4B/s640/ScreenShot_20160824211928.png)
+
+LSTM 또한 위와 같은 연속 구조를 갖지만, 반복 모듈은 조금 다른 구조를 갖고 있습니다.
+하나의 뉴럴 네트워크 레이어를 갖는 대신에 LSTM은 특별한 방법으로 상호 작용하는 4가지 연산이 존재합니다.
+
+![a](https://2.bp.blogspot.com/-_70ouQby7yE/V77SqIW9sRI/AAAAAAAAIP0/stcA7hR6TM8bT6VuqYF-L05aS8gL7Jb5QCK4B/s640/ScreenShot_20160824211928.png)
+
+자세한 흐름은 너무 걱정 마세요. 나중에 LSTM의 다이어그램을 하나씩 되짚어볼 것입니다. 지금은 우리가 사용할 표기에 대해 공부해보죠.
+
+![a](https://1.bp.blogspot.com/-DsZMvkDYnN0/V72pp17WM3I/AAAAAAAAIOE/f3aNjX9HL8oFjmDmfXq7CP6kOsa81bExgCK4B/s640/ScreenShot_20160824211928.png)
+
+위 그림에서 각각의 선은 모든 벡터를 노드의 결과로부터 다음 노드의 입력까지 나릅니다. 핑크 동그라미는 점별이라고 합니다. 노란 박스는 뉴럴 네트워크 레이어입니다. 합쳐지는 선은 합쳐지는 연결을 의미합니다. 흩어지는 선은 하나의 선을 복사한 뒤 다른 방향으로 벡터를 나르는 것을 뜻합니다.
+
+# The Core Idea Behind LSTMs
+-------------------------------------------------------------------
+LSTM의 핵심은 cell state 즉, 그림의 가장 윗 부분에 존재하는 수평선입니다. cell state는 컨베이어 벨트와 같습니다. 모든 연속적인 노드에 직선으로 간단한 상호작용을 하며 계속 나아갑니다. 이 방법은 정보가 변하지 않은 상태로 흘러가기 쉽습니다.
+
+![a](https://3.bp.blogspot.com/-lQ2LtpeINow/V72rqg_RzzI/AAAAAAAAIOU/Qw2DTujTgaoderFk0vhk8ncfV_eiEFl_wCK4B/s640/ScreenShot_20160824211928.png)
+
+LSTM은 cell state에 gates라고 불리는 구조에 의해 규제되어 정보를 더하거나 지우는 능력이 있습니다.
+
+gates는 정보가 선택적으로 지나가는 길입니다. gates는 시그모이드 연산이 구성되기도 하고 점별 곱셈 연산이 구성되기도 합니다.
+
+![a](https://1.bp.blogspot.com/-vFcV6ft06oI/V72svMQxmWI/AAAAAAAAIOg/gE5fLplstvUdbJGdukx78ZQVDGGGD1sPACK4B/s320/ScreenShot_20160824211928.png)
+
+다들 아시겠지만 시모모이드 레이어에서는 0과 1사이의 값이 출력됩니다. 또한 각 구성 요소가 얼마나 통과되어야 하는지 나타냅니다. 시그모이드 출력값이 0인 경우 아무것도 지나게 하지 말라는 뜻이고, 1은 모든 것을 다 통과시키라는 뜻입니다.
+
+LSTM은 cell state를 보호하고 조절하기 위해 **3개의 gates**가 존재합니다.
+
+# Step-by-Step LSTM Walk Through
+------------------------------------------------------
+**첫번째 단계**는 cell state에서 버릴 정보를 정하는 것입니다. 이 결정은 **"forget gate layer"**라고 불리는 **시그모이드 레이어**가 내립니다. 이 레이어는 h(t-1)과 x(t)를 검토해서 0과 1 사이의 값을 산출합니다. 위에서도 언급했듯이 1은 "잊지 말아라." 반면에 0은 "모두 잊어라."를 나타냅니다.
+
+이전 단어들을 기반으로 다음 단어를 예측하려는 language model의 예제로 돌아가봅시다. 이 문제에서는 cell state는 올바른 대명사를 사용하기 위해 아마 현재 주어의성별을 포함할지 모릅니다. 새로운 주어를 보았을 때 오랜된 주어의 성별은 잊고 싶어 합니다.
+
+![a](https://1.bp.blogspot.com/-ggFSK7miHEI/V767pH-8pcI/AAAAAAAAIOw/Dn6Fqkj2Jp0h4vSAor_8plC1n890MgG4QCK4B/s640/ScreenShot_20160824211928.png)
+
+**두번째 단계**는 어떤 새로운 정보를 cell state에 저장할 지 정하는 것입니다. 이 단계는 2개의 파트로 나뉩니다. **전자**는 **"input gate layer"**라는 **시그모이드 레이어**가 어떤 값들을 우리가 업데이트할 지 정합니다. **후자**는 tanh 레이어는 state에 더해질 수도 있는 새로운 후보 값들의 벡터(C`t)를 생성합니다. 다음 단계는 state에 업데이트하기 위해 전자와 후자를 합칩니다.
+
+language model 의 예제에서 오래된 주어의성별을 대체하기 위해 cell state에 새로운 주어의 성별을 추가하고 싶습니다.
+
+![a](https://2.bp.blogspot.com/-snWEpgWnURM/V769xOyJTUI/AAAAAAAAIPE/dbVvUA_q9_ExrbHBfJKipFG0BeuX9owegCK4B/s640/ScreenShot_20160824211928.png)
+
+**세번째 단계**는 오래된 C(t-1)을 새로운 cell state인 C(t)로 업데이트할 때입니다. 이전 단계에서 벌써 우리는 무엇을 해야할 지 정했습니다. 이제 실행하면 됩니다.
+
+잊기로 한 것들을 잊기 위해 오래된 state인 C(t-1)에 f(t)를 곱합니다. 그리고 i(t) * C`(t)를 더합니다. 이때까지 업데이트하기로 한 것들을 cell state에 연산하므로서 새로운 후보 값들이 생성되었습니다.
+
+language model의 예제에서, 오래된 주어의 성별에 대한 정보를 버리고 새로운 정보를 추가하는 단계입니다.
+
+![a](https://3.bp.blogspot.com/-jQuoy9Osn6g/V77Nh6NPaoI/AAAAAAAAIPU/QQ271icy5O8f1rRJhuccy4aY8I8tyAbeQCK4B/s640/ScreenShot_20160824211928.png)
+
+**마지막으로** 산출값(h(t))을 정하는 단계입니다. 이 산출값은 cell state 값에 기반하지만 한 번 여과되어 산출될 것입니다. 첫째, 시그모이드 레이어를 통해 cell state의 어떤 부분이 산출될 지 정합니다. 그리고 나서, cell state를 tanh 연산(결과값이 -1과 1 사이 값을 가진다.)을 시킨 뒤 시그모이드의 결과값과 곱합니다. 시그모이드 연산값과 tanh 연산값을 곱한 값을 산출값으로 정합니다.
+
+language model의 예제에서, 주어를 본 이후에 문장에서 주어 다음에 올 동사와 관련된 정보를 산출하고 싶을 것입니다. 예를 들어, 컴퓨터는 어떤 동사의 형태가 와야하는 지 알기 위해 주어가 단수인지 복수인지 산출하고 싶을 것입니다.
+
+![a](https://3.bp.blogspot.com/-gSBowA3Bj3M/V77QofCJzLI/AAAAAAAAIPg/9rrgBs4hYbsPsDAIpk5ggtPVrbbS_4AwwCK4B/s640/ScreenShot_20160824211928.png)
+
+# Variants on Long Short Term Memory
+-------------------------------------------------------
+이 때까지 설명한 LSTM은 다소 평범한 LSTM입니다. 그러나 모든 LSTM이 위와 같지 않습니다. 사실은 거의 모든 논문이 조금 다른 LSTM을 사용하고 있습니다. 차이는 작지만 언급할만한 가치는 있습니다.
+
+## 1. 
+Gers & Schmidhuber (2000)가 소개한 유명한 LSTM 변형은 "peeephole connection"을 추가했습니다. 즉, cell state에게 gate layer를 보여주는 것입니다.
+
+![a](https://1.bp.blogspot.com/-jjcK0APe4Pc/V77SIK4At6I/AAAAAAAAIPs/D_RPNVqbuFwgkJVX1BcXTixvDmEiGfulwCK4B/s640/ScreenShot_20160824211928.png)
+
+위 그림은 모든 gates에 peephole을 추가한 것이지만 많은 논문은 몇몇 gates에만 peephole을 추가할 것입니다. 
+
+## 2.
+또 다른 변형 LSTM은 두 개의 forget gates와 input gates를 사용하는 것입니다. 무엇을 잊어야할 지와 어떤 새로운 정보를 추가해야할 지를 따로따로 정하는 것 대신 한꺼번에 두 결정을 하는 것이다. 우리가 어떤 것을 입력할 때만 잊고 오래된 것을 잊을 때만 새로운 값을 state에 입력하는 것이다.
+
+![a](https://4.bp.blogspot.com/-a2273DXqexc/V77UArSB09I/AAAAAAAAIQA/V1d5n2CPkJcBGAHEezaimT87hhuaD6jdACK4B/s640/ScreenShot_20160824211928.png)
+
+## 3.
+좀 더 극적인 변형 LSTM은 Cho,et al (2014)가 소개한 Gated Recurrent Unit or GRU 입니다. forget and input gates를 하나의 "update gate"로 결합시킨 LSTM입니다. 또한 cell state와 hidden state를 병합시키고 약간의 다른 변화를 주었습니다. resulting model은 기존의 LSTM보다 간단하고 엄청 유명해졌습니다. 
+
+ ![a](https://1.bp.blogspot.com/-l8GDUGzA9bw/V77VRFlET4I/AAAAAAAAIQM/FNbjwnCXEIMnukt5T-54ECzoyuzj8ZGpwCK4B/s640/ScreenShot_20160824211928.png)
+
+위에서 소개드린 3가지 변형 말고도 더 많은 변형 LSTM이 존재합니다. 무엇이 가장 좋다고 할 수 없지만 점점 더 좋아지고 있는 것은 확실합니다.
+
+# Conclusion
+------------------------------------------------------------
+이때까지 RNN을 통해 주목할만한 결과를 사람들이 보여주었다는 것을 언급했습니다. 모든 좋은 결과는 LSTM을 이용했습니다. LSTM은 거의 모든 문제에서 더 좋은 결과를 산출해냅니다.
+
+LSTM은 겉보기에 처음 공부하기 어려워 보일 수 있습니다. 저의 글을 하나씩 곱씹으며 때로는 다른 글을 보면서 LSTM에 한걸음 더 다가가기를 바랍니다.
+
+# Reference
+------------------------------------------------------------
+* http://colah.github.io/posts/2015-08-Understanding-LSTMs/

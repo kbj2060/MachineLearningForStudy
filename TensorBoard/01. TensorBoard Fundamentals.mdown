@@ -1,0 +1,148 @@
+# Tensorboard 사용법 익히기
+--------------------------------------------------------------
+텐서보드 사용법을 익히는 이유는 텐서플로우를 조금 더 직관적으로 공부하기 위함입니다.
+텐서보드를 이용해 코드를 그래프로 표현하는 법을 익히기 위해서는 텐서보드에 대한 텐서플로우 라이브러리를 공부해야 합니다.
+간단힌 살펴본 결과 코드의 전체적인 흐름은 같으나 그래프로 표현하고 싶은 cost나 weight의 변화 혹은 딥러닝의 레이어의 흐름을 표현하는 코드가 추가되어 있습니다.
+
+우선 코드를 보면서 하나씩 공부해 나가겠습니다.
+
+```python
+import tensorflow as tf
+import numpy as np
+import input_data
+
+
+def init_weights(shape, name):
+    return tf.Variable(tf.random_normal(shape, stddev=0.01), name=name)
+
+# This network is the same as the previous one except with an extra hidden layer + dropout
+def model(X, w_h, w_h2, w_o, p_keep_input, p_keep_hidden):
+    # Add layer name scopes for better graph visualization
+    with tf.name_scope("layer1") as scope:
+        X = tf.nn.dropout(X, p_keep_input)
+        h = tf.nn.relu(tf.matmul(X, w_h))
+    with tf.name_scope("layer2") as scope:
+        h = tf.nn.dropout(h, p_keep_hidden)
+        h2 = tf.nn.relu(tf.matmul(h, w_h2))
+    with tf.name_scope("layer3") as scope:
+        h2 = tf.nn.dropout(h2, p_keep_hidden)
+        return tf.matmul(h2, w_o)
+
+mnist = input_data.read_data_sets("MNIST_data/", one_hot=True)
+trX, trY, teX, teY = mnist.train.images, mnist.train.labels, mnist.test.images, mnist.test.labels
+
+X = tf.placeholder("float", [None, 784], name="X")
+Y = tf.placeholder("float", [None, 10], name="Y")
+
+w_h = init_weights([784, 625], "w_h")
+w_h2 = init_weights([625, 625], "w_h2")
+w_o = init_weights([625, 10], "w_o")
+
+# Add histogram summaries for weights
+w_h_simm = tf.histogram_summary("w_h_summ", w_h)
+w_h2_summ = tf.histogram_summary("w_h2_summ", w_h2)
+w_o_summ = tf.histogram_summary("w_o_summ", w_o)
+
+p_keep_input = tf.placeholder("float", name="p_keep_input")
+p_keep_hidden = tf.placeholder("float", name="p_keep_hidden")
+
+py_x = model(X, w_h, w_h2, w_o, p_keep_input, p_keep_hidden)
+
+with tf.name_scope("cost") as scope:
+    cost = tf.reduce_mean(tf.nn.softmax_cross_entropy_with_logits(py_x, Y))
+    train_op = tf.train.RMSPropOptimizer(0.001, 0.9).minimize(cost)
+    # Add scalar summary for cost
+    cost_summ = tf.scalar_summary("cost", cost)
+
+with tf.name_scope("accuracy") as scope:
+    correct_pred = tf.equal(tf.argmax(Y, 1), tf.argmax(py_x, 1)) # Count correct predictions
+    acc_op = tf.reduce_mean(tf.cast(correct_pred, "float")) # Cast boolean to float to average
+    # Add scalar summary for accuracy
+    acc_summ = tf.scalar_summary("accuracy", acc_op)
+
+with tf.Session() as sess:
+    # create a log writer. run 'tensorboard --logdir=./logs/nn_logs'
+    writer = tf.train.SummaryWriter("./logs/nn_logs", sess.graph)
+    merged = tf.merge_all_summaries()
+
+    # you need to initialize all variables
+    tf.initialize_all_variables().run()
+
+    for i in range(5):
+        for start, end in zip(range(0, len(trX), 128), range(128, len(trX), 128)):
+            sess.run(train_op, feed_dict={X: trX[start:end], Y: trY[start:end],
+                                          p_keep_input: 0.8, p_keep_hidden: 0.5})
+        summary, acc = sess.run([merged, acc_op], feed_dict={X: teX, Y: teY,
+                                          p_keep_input: 1.0, p_keep_hidden: 1.0})
+        writer.add_summary(summary, i)  # Write summary
+        print(i, acc)                    # Report the accuracy
+```
+
+위 코드는 Sung kim님의 깃허브에서 가져온 것입니다. MNIST 예제를 텐서보드로 표현하는 코드입니다.
+코드를 하나씩 표현하기 전에 위 코드의 텐서보드를 보여드리겠습니다.
+
+![s](https://4.bp.blogspot.com/-ziVtS3K59cc/V7WzWKugWxI/AAAAAAAAIF0/6_IdXadNy_0ukxS0dhhXU9SaKzmN3LhwwCK4B/s640/graph_run%253D.png)
+
+텐서보드에서 위 노드를 클릭해보면 더 상세한 정보를 보여줍니다. 
+
+위 코드에서 텐서플로우 연산에 대한 코드 분석이 아닌 텐서보드에 대한 코드만을 분석하겠습니다.
+텐서보드를 위한 코드들을 우선 나열하고 하나씩 텐서보드에서 어떻게 실현되는지 알아보겠습니다.
+
+* tf.name_scope()
+* tf.histogram_summary()
+* tf.scalar_summary()
+* tf.train.SummaryWriter()
+* tf.merge_all_summaries()
+* tf.train.SummaryWriter.add_summary()
+* name 
+
+
+## 1. tf.name_scope()
+
+name_scope 함수는 노드의 이름을 지정하고 노드의 큰 틀을 제공해줍니다. 그 틀 안에서 실행되는 연산들은 텐서보드에서 노드를 클릭하면 연산의 흐름을 볼 수 있습니다.
+
+예제 코드에서는 name_scope가 accuracy , cost , layer1,2,3로 총 5번 나옵니다. 텐서보드에서 역시 총 5개의 노드를 가지고 있습니다.
+ 
+위 예시를 더 자세히한 그림을 아래에서 보겠습니다. 제일 처음 나온 layer1 노드를 자세히 보겠습니다.
+
+![s](https://1.bp.blogspot.com/-INCrGDDl-Ow/V7W1dzBGjGI/AAAAAAAAIGA/wKj5QuDCm1oa_XKL0kgbbXS72cSksO3cgCK4B/s640/ScreenShot_20160812235353.png)
+
+layer1 에서는 3개(w_h ,X, p_keep_input )의 input과 2개(layer2, cost)의 output으로 이루어져 있습니다. p_keep_input은 드랍 아웃의 비율을 나타내는 것입니다. 또한 w_h는 특정 범위의 난수값으로 초기화되어 있습니다. 
+코드의 흐름대로 드랍아웃과 렐루이 그래프의 흐름으로 잘 표현되었습니다.
+
+## 2. tf.histogram_summary()
+
+이건 함수 이름 그대로 histogram으로 변수를 요약해주겠다는 것입니다. 제가 생각했던 히스토그램과는 조금 차이가 있네요.. 막대 그래프를 예상했었는데..
+
+![s](https://2.bp.blogspot.com/-18Ljre-zZmk/V7W6BVjt1AI/AAAAAAAAIGM/g4FkqSAM7iYZh26pT0xIQUOUnjnHSwW2gCK4B/s640/ScreenShot_20160812235353.png)
+
+텐서플로우에 있는 summary 함수는 대부분이 변수의 변화 양상을 그래프로 보여주는 함수일 것입니다.
+
+## 3. tf.scalar_summary
+
+histogram_summary과 마찬가지로 요약해주는 함수입니다. 하지만 이 함수는 scalar로 변수의 변화를 요약해줍니다. 이 함수가 나타내는 그래프는 우리가 늘상 보는 그래프일 것입니다.
+
+![s](https://2.bp.blogspot.com/-kT8RsG5nUjE/V7W72y6nrEI/AAAAAAAAIGY/YPuE6LERrbQUxaGDOEHZVP2mGeodJMSngCK4B/s640/ScreenShot_20160812235353.png)
+
+정확도는 올라가고 비용은 감소하는 그래프를 볼 수 있을 것입니다. layer1,2,3 와 마찬가지로 accuracy와 cost는 tf.name_scope 안에서 실행되는 변수들로 텐서보드 그래프에서도 볼 수 있습니다.
+
+## 4. tf.train.SummaryWriter() and tf.train.SummaryWriter.add_summary()
+
+tf.train.SummaryWriter 클래스는 events file을 log 디렉토리에 생성하고 events와 summaries를 추가하는 함수입니다.
+
+tf.train.SummaryWriter.add_summary 함수는 tf.train.SummaryWriter 클래스의 한 함수이며, 코드에서는 학습할 때마다 요약을 추가해서 그래프를 만드는 것입니다.
+
+## 5. name
+
+코드를 보시면 연산값을 저장하는 변수를 제외한 모든 변수에 이름을 붙입니다.
+텐서플로우에서 지원하는 연산 함수, 예를 들어 softmax, cast, reduce_mean 등등, 은 텐서보드의 그래프에 추가되어 있지만 나머지 변수들은 유저가 이름을 붙여 코딩을 해야합니다.
+텐서보드는 텐서플로우 코드의 변수명을 보고 이름을 붙이는 것이 아니라
+변수를 만들 때 name parameter를 보고 이름을 붙인다는 것입니다.
+
+
+간단히 예제 안에 있는 함수들로만 공부를 해봤습니다.
+텐서플로우 홈페이지에 가보니 더 많은 함수들이 존재합니다.
+
+* https://www.tensorflow.org/api_docs/python/index.html
+
+저도 아직 위 내용만 간단히 알기 때문에 더 많은 공부를 해야겠습니다.

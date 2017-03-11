@@ -1,0 +1,154 @@
+첫번째 RNN 공부는 TensorFlow 공식 홈페이지 RNN 튜토리얼에서 소개된 좋은 게시글을 공부했었습니다. 이번에는 TensorFlow 공식 홈페이지 튜토리얼을 공부할 것입니다.
+
+# Recurrent Neural Networks
+------------------------------------
+## Introduction
+
+RNN과 LSTM을 소개하기 위해 colah's blog 게시글을 보기 바랍니다. 이 글을 번역하여 공부한 것이 저의 첫번째 게시글이었습니다.
+## Language Modeling
+
+이 튜토리얼에서 언어 모델링 문제에서 RNN을 어떻게 학습시키는 지 알아 볼 것입니다. 우리의 목표는 문장에 확률을 할당하는 확률 모델을 fit시키는 것입니다. 주어진 이전 단어들의 히스토리를 이용하여 다음 단어를 예측할 것입니다. 이런 모델의 질을 측정하기 좋은 Penn Tree Bank(PTB) 데이터셋을 이용할 것입니다.
+
+언어 모델링은 음성 인식, 기계 번역, 이미지 캡셔닝과 같은 많은 재미있는 문제에 핵심이기도 합니다. 이 곳을 보시면 RNN이 여러 재밌는 분야에 쓰이고 있다는 것을 알 수 있습니다.
+## Tutorial Files
+
+아래 파일들은 TensorFlow Github의 tensorflow/models/rnn/ptb 에 있습니다.
+
+|File |Purpose|
+|-----|-------|
+|ptb_word_lm.py |PTB 데이터 셋을 train하는 코드|
+|reader.py |데이터셋를 읽는 코드|
+
+## Download and Prepare the Data
+
+이 튜토리얼에 필요한 데이터셋은 
+Tomas Mikolov's webpage : http://www.fit.vutbr.cz/~imikolov/rnnlm/simple-examples.tgz 
+에 있습니다. 
+
+이 데이터셋은 전처리되어 있고 10000의 다른 단어로 이루어져 있습니다. reader.py를 이용해 위 단어들을 unique integer identifier로 만듭니다.
+## The Model
+
+### LSTM
+
+이 모델의 핵심은 한 단어를 처리하고 연속적으로 올 수 있는 문장의 확률을 계산하는 LSTM cell입니다. 네트워크의 memory state는 0으로 초기화되어 있고 단어를 읽은 후에 업데이트됩니다. 또한, 계산적인 이유로 batch_size라는 작은 크기로 데이터를 처리할 것입니다.
+
+기본 수도 코드는 아래와 같습니다.
+
+```python
+lstm = rnn_cell.BasicLSTMCell(lstm_size)
+# Initial state of the LSTM memory.
+state = tf.zeros([batch_size, lstm.state_size])
+
+loss = 0.0
+for current_batch_of_words in words_in_dataset:
+    # The value of state is updated after processing each batch of words.
+    output, state = lstm(current_batch_of_words, state)
+
+    # The LSTM output can be used to make next word predictions
+    logits = tf.matmul(output, softmax_w) + softmax_b
+    probabilities = tf.nn.softmax(logits)
+    loss += loss_function(probabilities, target_words)
+```
+### Truncated Backpropagation
+
+학습 과정이 다루기 쉽게 만들기 위해서 backpropagation에서 gradient를 줄이는 것이 당연한 과정입니다. 이 과정은 num_step의 길이를 input에 넣고 각 반복 후에 backward를 함으로서 쉽게 실행할 수 있습니다.
+
+심플한 버젼은 아래와 같습니다.
+
+```python
+# Placeholder for the inputs in a given iteration.
+words = tf.placeholder(tf.int32, [batch_size, num_steps])
+
+lstm = rnn_cell.BasicLSTMCell(lstm_size)
+# Initial state of the LSTM memory.
+initial_state = state = tf.zeros([batch_size, lstm.state_size])
+
+for i in range(num_steps):
+    # The value of state is updated after processing each batch of words.
+    output, state = lstm(words[:, i], state)
+
+    # The rest of the code.
+    # ...
+
+final_state = state
+```
+
+그리고 아래가 모든 데이터셋을 거쳐 반복을 실행하는 방법입니다.
+
+```python
+# A numpy array holding the state of LSTM after each batch of words.
+numpy_state = initial_state.eval()
+total_loss = 0.0
+for current_batch_of_words in words_in_dataset:
+    numpy_state, current_loss = session.run([final_state, loss],
+        # Initialize the LSTM state from the previous iteration.
+        feed_dict={initial_state: numpy_state, words: current_batch_of_words})
+    total_loss += current_loss
+```
+## Inputs
+
+단어 ID는 LSTM에 들어가기 전에 dense representation에 넣어질 것입니다. 이 과정은 모델이 더 특정한 단어들에 대한 정보를 효율적으로 나타낼 수 있다. 아래와 같은 코드가 사용됩니다.
+
+```python
+# embedding_matrix is a tensor of shape [vocabulary_size, embedding size]
+word_embeddings = tf.nn.embedding_lookup(embedding_matrix, word_ids)
+```
+
+embedding 행렬은 랜덤적으로 초기화되고 모델은 데이터를 보고 단어의 의미의 차이를 학습할 수 있을 것입니다.
+
+## Loss Function
+
+타겟 단어들의 평균 음수 로그 확률을 최소화해야하만 합니다.
+![as](https://2.bp.blogspot.com/-DuviZ21egak/V8FOzKt6uQI/AAAAAAAAISQ/T5uBrogR8gII-AVVIIceBBVmJaCnHLoQgCK4B/s200/ScreenShot_20160827172611.png)
+실행시키기 굉장히 어렵지만 sequence_loss_by_example은 벌써 사용가능합니다. 그래서 여기서 그냥 사용합니다.
+
+논문에서 리포트된 전형적인 측정법은 평균 perplexity라고도 불리는 average-per-word perplexity입니다. 식은 아래와 같습니다.
+![a](https://1.bp.blogspot.com/-icXw8iXDy94/V8FPwcUQ9rI/AAAAAAAAISk/t8zBqLc21gkAO6f-GT-q1M1teGsqNsA8gCK4B/s400/ScreenShot_20160827172611.png)
+
+## Stacking multiple LSTMs
+
+모델에 눈에 띄는 힘을 주기 위해, LSTM에 더 많은 레이어를 추가해야합니다. 첫번째 레이어의 output은 두번째 레이어의 input이 됩니다.
+
+레이어를 매끄럽게 이어주는 MultiRNNCell 클래스가 있습니다.
+
+```python
+lstm = rnn_cell.BasicLSTMCell(lstm_size, state_is_tuple=False)
+stacked_lstm = rnn_cell.MultiRNNCell([lstm] * number_of_layers,
+    state_is_tuple=False)
+
+initial_state = state = stacked_lstm.zero_state(batch_size, tf.float32)
+for i in range(num_steps):
+    # The value of state is updated after processing each batch of words.
+    output, state = stacked_lstm(words[:, i], state)
+
+    # The rest of the code.
+    # ...
+
+final_state = state
+```
+
+## Run the Code
+
+위에서 언급한 코드 파일을 깃허브에서 다운받아 실행합니다.
+
+```shell
+cd tensorflow/models/rnn/ptb
+python ptb_word_lm.py --data_path=/tmp/simple-examples/data/ --model small
+```
+
+model 에는 small,medium,large 세가지 설정을 지원합니다. 차이점은 LSTM의 크기와 트레이닝에 쓰이는 hyperparameters입니다.
+
+small은 perplexity가 테스트 셋에서 120 이하이고 large는 80이하 입니다. large가 small보다 긴 시간을 트레이닝하지만 더 정확한 결과를 도출합니다.
+
+## What Next?
+
+모델의 정확도를 높이기 위한 여러 tricks를 언급하지 않았습니다.
+
+* decreasing learning rate schedule
+* dropout between the LSTM layers
+
+위 과정을 모두 공부하고 2가지도 또한 공부하길 바랍니다.
+
+## Reference
+
+* https://www.tensorflow.org/versions/r0.10/tutorials/recurrent/index.html#what-next

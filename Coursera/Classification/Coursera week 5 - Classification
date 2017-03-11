@@ -1,0 +1,93 @@
+1. The amazing idea of boosting a classifier
+------------------------
+
+boosting 은 weak classifier을 모아 하나의 great classifier을 만드는 것이다.
+
+![](https://1.bp.blogspot.com/-XhIMSAtanyw/V6cScVMyA8I/AAAAAAAAHxo/E-3unCyb4rwBWKhv8iei4T3X6Fk-pu6BwCK4B/s400/ScreenShot_20160807184327.png)
+
+캐글에서 많은 우승을 차지한 알고리즘이라고 소개가 되어있다. 요즘도 그러는 지는 잘 모르겠다. 왜냐하면 요즘은 딥러닝이 모든 순위권에 있기 때문이다.
+
+![](https://4.bp.blogspot.com/-rMkre64RTis/V6cS44nL79I/AAAAAAAAHxw/j0J5-pjx91gjJLEmVn-eP5mI7OKlPfVBgCK4B/s400/ScreenShot_20160807184327.png)
+
+위 공식이 주요 공식이다. 다음에는 w 와 alpha 에 대해 더 알아 보겠다.
+그 전에 위 공식을 잘 숙지해야한다. f(xi)가 데이터 포인트가 아닌 weak classifier다.
+
+![](https://4.bp.blogspot.com/-tP6zBlvbJrg/V6cT_Wq9irI/AAAAAAAAHyA/DcoqIz7mg6gdX4j0mJPJK7z-PnA6LERuACK4B/s400/ScreenShot_20160807184327.png)
+
+
+부스팅의 주요 알고리즘이다. 여기서 주목해야할 것은 이 알고리즘은 weighted data로부터 학습한다는 것이다. 그래서 변수 alpha가 등장한다.
+
+![](https://4.bp.blogspot.com/-a26YnxTcflo/V6cVSS31vEI/AAAAAAAAHyM/mSLex-abkegYlqZyqbTmXWpkCH1k1nh8gCK4B/s400/ScreenShot_20160807184327.png)
+
+원래 decision tree였다면 갯수로 예측을 했겠지만 boosting은 alpha로 계산한다.
+
+![](https://1.bp.blogspot.com/-BSwbiqxvcKI/V6ceIs_d62I/AAAAAAAAHyc/aFv3huuHFL4qxJPsh3DhO2lsqif-eCazwCK4B/s400/ScreenShot_20160807184327.png)
+
+위처럼 weak classifier 로 예측하고 에러을 토대로 weighted data를 만든다. 첫번째 classifier가 틀린 데이터 포인트에 높은 weight를 부여한다. 그리고 다른 weak classifier로 반복한다. weak classifier의 갯수만큼 coef 와 alpha 를 갱신하고 마지막에는 더 나은 예측을 하게 된다.
+
+2. AdaBoost
+-----------
+
+![](https://4.bp.blogspot.com/-KfRcUHuEtl0/V6b0p8LgBMI/AAAAAAAAHvo/rpGWpLY1ZL8FepCfpMMD9vnWwwUNjBmAwCK4B/s400/ScreenShot_20160807174257.png)
+
+adaboost 를 구성하는 알고리즘에서 2가지 문제에 대해 공부한다.
+
+* 첫째는 얼마나 ft를 믿어야하는가?
+* 둘째는 mistakes에 더 무게를 둬야하는가?
+
+우선 weighted error 에 대해 알아보겠다.
+
+![](https://4.bp.blogspot.com/-Tr9IzZmIHxc/V6b5JH1XKTI/AAAAAAAAHv0/H5kwwh6ySG4uoso_ctBfxzBZRK1zbu7WACK4B/s400/ScreenShot_20160807180218.png)
+
+data point 에 sushi was great 와 lable 과 weight 가 있다. 우선 classifier로 sushi was great를 예측한다. +가 나왔을 때 , data point 에 있던 lable 과 비교한다. 예측 라벨과 진짜 라벨이 맞다면, weight of correct 에 weight를 더한다. 위와 같은 방법으로 weighted classification error를 구해야한다.
+
+![](https://1.bp.blogspot.com/-Z-vOW_dZ3-k/V6b6FKYs9MI/AAAAAAAAHwA/hBTSO5IWbbAcw3v5Z7SdH52oYYQuR4dIwCK4B/s400/ScreenShot_20160807180621.png)
+
+weighted_error 는 모든 데이터 포인트의 weight를 모든 mistakes의 weight로 나눈 값이다.
+
+![](https://1.bp.blogspot.com/-Wna2l7UVYfg/V6b7RWDT3CI/AAAAAAAAHwM/i6ulPubXHpUN-qzUV53K4LwiH0SeeXtVQCK4B/s400/ScreenShot_20160807181123.png)
+
+w hat 을 weighted error 를 통해 구하는 방법을 위와 같이 제시한다. 강의하시는 교수님은 w hat을 구하는 공식이 굉장히 아름답다고 한다. 
+
+* weighted error가 낮으면 높은 w hat이 나오고 
+* weighted error가 높으면 - 값이 나온다.
+
+0.5인 error 값을 가지면 0이 나온다. 즉, 그 feature은 애매하니까 버리자는 것이다. 그 다음이 주목할만 하다. 높은 에러율을 가지면 버리지 않고 - 값으로 두어 그 feature가 예측한 값의 반대를 예측하겠단 소리다. 즉, 어떤 사람이 말하는 것이 항상 틀리다면 그 반대는 항상 옳다는 소리이다.
+
+여기까지 첫번째 문제를 해결했다. 이제 alpha 에 대해 얘기해야겠다.
+
+![](https://1.bp.blogspot.com/-1VJjyhdU0Sw/V6b9v2J5E8I/AAAAAAAAHwY/YjNSEM49Fawwley-fAFPRkmc69k0EefwQCK4B/s640/ScreenShot_20160807182147.png)
+
+우선 coef와 alpha에 대해 좀 더 자세히 알아야한다. coef 는 feature의 중요도를 체크하는 것이고, alpha 는 xi,yi 인 data points의 중요도를 체크하는 것이다.
+
+위 사진을 보면 correct 이고 w hat 이 높을수록 xi,yi의 중요도가 줄어든다. 반대로 mistake 이고 w hat이 높을 수록 xi,yi 의 중요도가 커진다.
+
+![](https://4.bp.blogspot.com/-KZMZm22r_gA/V6cDxZpRdGI/AAAAAAAAHxQ/04ljhruKkL4u6LCbXPO9h2U13uUrr4eMQCK4B/s400/ScreenShot_20160807184327.png)
+
+위와 같이 두 문제에 대한 공식들을 모두 구해봤다. 마지막에는 alpha들을 normalize 하는 과정이다.
+
+3. Applying Adaboost
+-----------
+
+![](https://2.bp.blogspot.com/-OzigVJ6QQZA/V6cCyRff_eI/AAAAAAAAHw8/7QK5HmGWrn4_XL729mW7w7f78qCuyv6rACK4B/s400/ScreenShot_20160807184327.png)
+
+adaboost에서 decision stump 2개를 ensemble 시킨 것이다. 첫번째 decision stump의 weight가 그 다음 것보다 높은 것으로 봐서 더 중요하다고 할 수 있다. 알고리즘 차례대로 w hat을 구해보자.
+
+![](https://4.bp.blogspot.com/-zvD-1om0jRU/V6cghmik_YI/AAAAAAAAHyo/fzyeP5WYnMQ6qkUuwXDY9pTebWw8v25yACK4B/s400/ScreenShot_20160807184327.png)
+
+각각 decision stump 의 error를 구해서 가장 낮은 에러율을 가진 weak classifier 순서로 weighted data를 갱신한다. 위처럼 income에 대한 decision stump 가 선택되어 w hat까지 구해봤다. 그 다음엔 alpha를 통해 data 를 갱신해야한다.
+
+![](https://1.bp.blogspot.com/-GLlIC5gkVnc/V6chFgOxPsI/AAAAAAAAHyw/5CVe1otzsuYyeYvolNc4WvFpJfOOQlo8wCK4B/s400/ScreenShot_20160807184327.png)
+
+위처럼 공식을 통해 data 를 갱신했다. 다른 weak classifier을 통해 계속 데이터를 갱신하고 마지막엔 더 나은 예측을 하게 된다. 여기서 weak classifier는 한 feature로 예측하는 decision stump 이다.
+
+4. Convergence and overfitting in boosting
+---------
+
+![](https://2.bp.blogspot.com/-mzxr1U_Xe8M/V6d-57a9btI/AAAAAAAAH0U/wBrOGQZY0fwh90x9vz7ppZLA3EmJ9B9eACK4B/s400/ScreenShot_20160808033304.png)
+
+위 두 그래프를 보면 알 수 있듯이 boosting은 복잡도가 늘어날수록 overfitting이 심해지지 않는다. 하지만 결국엔 boosting 또한 overfitting 되기 때문에 T의 최대 갯수를 아는 것이 중요하다.
+
+![](https://3.bp.blogspot.com/-kNlfbIellEI/V6d_8yK-faI/AAAAAAAAH0g/rv8QbRHlepUBpEdcHLaGkXgd_8dxfSa8gCK4B/s400/ScreenShot_20160808033729.png)
+
+그렇다면 T는 어떻게 구해야하는가? 전에도 언급했듯이 람다를 구할 때처럼 validation set을 이용해야한다.

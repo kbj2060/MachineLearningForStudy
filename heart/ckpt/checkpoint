@@ -1,0 +1,2 @@
+model_checkpoint_path: "/home/tensorflow/workspace/MachineLearning/Tensorflow_Keras/ckpt/heart.ckpt"
+all_model_checkpoint_paths: "/home/tensorflow/workspace/MachineLearning/Tensorflow_Keras/ckpt/heart.ckpt"
