@@ -1,7 +1,6 @@
 import numpy as np
 import gym
 from gym.envs.registration import register
-import random as pr
 import matplotlib.pyplot as plt
 import tensorflow as tf
 
@@ -45,7 +44,11 @@ with tf.Session() as sess:
         local_loss = []
 
         while not done:
-            Qs = sess.run(Qpred, feed_dict={X : one_hot(s)})
+            '''
+             * Qs moves before Agent moves
+            '''
+            Qs = sess.run(Qpred, feed_dict={X: one_hot(s)})
+
             if np.random.rand(1) < e:
                 a = env.action_space.sample()
             else:
@@ -53,16 +56,23 @@ with tf.Session() as sess:
 
             s1, reward, done, _ = env.step(a)
 
+            '''
+             * Qs is correct answer because if done, Qs get 0 or 1
+             and if not done, Agent is survived so it gets points
+             * Qs1 is advisor who leads us to the goal, but
+               we are gonna trust him a little in this slippery game
+            '''
             if done:
-                Qs[0,a] = reward
+                Qs[0, a] = reward
             else:
                 Qs1 = sess.run(Qpred, feed_dict={X : one_hot(s1)})
-                Qs[0,a] = reward + dis * np.max(Qs1)
+                Qs[0, a] = reward + dis * np.max(Qs1)
 
-            sess.run(train, feed_dict={X : one_hot(s), Y : Qs})
+            sess.run(train, feed_dict={X: one_hot(s), Y: Qs})
             rAll += reward
             s = s1
+        print "loop is done!"
         rList.append(rAll)
-        print("Percentage of successful episodes : " + str(sum(rList)/num_ep)+ "%")
-        plt.bar(range(len(rList)), rList, color="blue")
-        plt.show()
+    print("Percentage of successful episodes : " + str(sum(rList)/num_ep * 100)+ "%")
+    plt.bar(range(len(rList)), rList, color="blue")
+    plt.show()

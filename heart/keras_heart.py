@@ -2,12 +2,12 @@
  * llewyn 17.03.02
  * 3 Layers Neural Network using Stanford-Tutorial's heart.csv data
 '''
-from keras.models import Sequential
-from keras.layers import Dense, Dropout
+from keras_creditcard.models import Sequential
+from keras_creditcard.layers import Dense, Dropout
 from sklearn.model_selection import train_test_split
 import pandas as pd
 import os
-from keras.callbacks import ModelCheckpoint, TensorBoard
+from keras_creditcard.callbacks import ModelCheckpoint, TensorBoard
 
 '''
  * Set up Paths and Numbers
