@@ -132,26 +132,10 @@ class preprocess_data(object):
         df = df.drop(period.difference(date))
 
         return df
-
-    def classify_sales(self, data):
-        data = [int(a[0:-1]) for a in data]
-        value = []
-
-        for sale in data:
-            if int(sale) < 1.117600e+06:
-                value.append(0)
-            elif int(sale) >= 1.117600e+06 and int(sale) < 1.362900e+06:
-                value.append(1)
-            elif int(sale) >= 1.362900e+06 and int(sale) < 1.700400e+06:
-                value.append(2)
-            elif int(sale) >= 1.700400e+06:
-                value.append(3)
-
-        return value
-
+    
     def get_data(self):
         date, sales = self.order_data()
-        sales = self.classify_sales(sales)
+        sales = [int(a[0:-1]) for a in sales]
         df = self.make_dataframe(date, sales)
         fst, snd, thd, fth = self.load_weather(self.text)
 
