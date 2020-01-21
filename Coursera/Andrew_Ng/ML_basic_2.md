@@ -17,7 +17,8 @@
 
 ---
 
-![regression](https://image.slidesharecdn.com/mlppt-190911145734/95/gradient-descent-algorithm-4-638.jpg?cb=1568214298) (출처 : https://image.slidesharecdn.com/mlppt-190911145734/95/gradient-descent-algorithm-4-638.jpg?cb=1568214298\)
+![regression](https://image.slidesharecdn.com/mlppt-190911145734/95/gradient-descent-algorithm-4-638.jpg?cb=1568214298) 
+(출처 : https://image.slidesharecdn.com/mlppt-190911145734/95/gradient-descent-algorithm-4-638.jpg?cb=1568214298\)
 
 파라미터 벡터 $\theta∈R^{n+1}$에 대하여 비용 함수는 다음과 같이 나타내어진다.모든 파라미터와 모든 트레이닝 셋에 대한 비용함수를 표현한 것이다. $$ J(\theta) = \frac{1}{2m} \sum*{i=1}^m \left(h_\theta(x^{(i)})-y^{(i)} \right)^2 $$ 여기서 $h_\theta(x)$는 전에 모델링에서 정의했듯이 아래와 같이 정의된다. $$h_\theta(x) =\theta_0 x_0 + \theta_1 x_1 + ... + \theta_n x_n$$ y 값은 정답 값을 의미한다.
 
@@ -27,7 +28,8 @@
 
 ---
 
-![logistic](https://wikidocs.net/images/page/4289/logreg403.PNG) (출처 : https://wikidocs.net/images/page/4289/logreg403.PNG\)
+![logistic](https://wikidocs.net/images/page/4289/logreg403.PNG) 
+(출처 : https://wikidocs.net/images/page/4289/logreg403.PNG\)
 
 위에서 말했듯이 회귀와는 비용 함수가 다르다. $$ J(\theta)=\text{cost} \left( h_\theta (x), y \right) =\color{royalblue}{-} y \color{royalblue}{\log\left( h_\theta (x) \right)}\color{salmon}{-} (1-y) \color{salmon}{\log\left( 1-h_\theta (x) \right)}$$ 볼록 함수를 만들어 주기 위해 위와 같이 만들어져있다. $h_\theta(x)$는 전에 모델링에서 정의했듯이 아래와 같이 정의된다. $$h_\{\theta}(x)=\frac{1}{1+\exp(-\theta^{T}x)}$$<br>
 
@@ -35,7 +37,8 @@
 
 ---
 
-비용 함수를 정의했고, 비용 함수의 값을 줄여나가는 방법에 대해 알아봐야 한다. 그럼 비로소 기계가 학습해서 실전에 쓰일 수 있는 단계가 된 것이다. 비용 함수의 값을 줄이는 방법을 Optimization(최적화)라고 한다. ![최적화](https://horizon.kias.re.kr/wp-content/uploads/2019/03/Figure_1-500x349.png) (출처 : https://horizon.kias.re.kr/wp-content/uploads/2019/03/Figure_1-500x349.png\)
+비용 함수를 정의했고, 비용 함수의 값을 줄여나가는 방법에 대해 알아봐야 한다. 그럼 비로소 기계가 학습해서 실전에 쓰일 수 있는 단계가 된 것이다. 비용 함수의 값을 줄이는 방법을 Optimization(최적화)라고 한다. ![최적화](https://horizon.kias.re.kr/wp-content/uploads/2019/03/Figure_1-500x349.png) 
+(출처 : https://horizon.kias.re.kr/wp-content/uploads/2019/03/Figure_1-500x349.png\)
 
 위와 같은 그림에서 파란색으로 된 부분의 최소값으로 향해 가는 방법이다. 즉, $J(\theta)$를 최소화하는 $\theta$의 집합을 찾는 과정이다. 최적화 함수는 회귀와 분류가 같다. 다만, 최적화 함수 내의 가설 함수($h(\theta)$)만 다를 뿐 공식은 같다.
 
