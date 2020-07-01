@@ -26,7 +26,7 @@ Machine Learning
 8. Examples
 
  8-1. heart
-  : [CS 20SI: Tensorflow for Deep Learning Research](http://web.stanford.edu/class/cs20si/index.html) 강의에서 heart.csv 데이터로 공부한 폴더
+   : [CS 20SI: Tensorflow for Deep Learning Research](http://web.stanford.edu/class/cs20si/index.html) 강의에서 heart.csv 데이터로 공부한 폴더
  
  8-2. sales
   : 음식점 데이터로 공부한 폴더
