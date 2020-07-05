@@ -1,4 +1,4 @@
-# A deep learning framework for financial time
+﻿# A deep learning framework for financial time
 
 ![plot](./img/plot.png)
 주식 데이터 예측에 LSTM이 이전 종가를 그대로 다음 날 종가로 예측하는 lagging 현상을 줄이고자 위 논문을 재구현했습니다. 
@@ -43,9 +43,20 @@ deep feature를 구하기 위해 SAEs 모델을 이용합니다.
 #### 4. LSTM
 ![lstm](./img/lstm.PNG)
 
-LSTM은 구글에 많이 찾아볼 수 있는 모델 구성을 이용하였습니다.
+LSTM은 구글에 많이 찾아볼 수 있는 모델 구성을 이용하였습니다.```mermaid
+graph LR
+A(Preprocessing) --> B(Denoising)
+B --> C(AutoEncoder)
+C --> D(LSTM)
+D --> E(Prediction)
+```
 
-#### 5. Prediction
+#### 51. Prediction
 ![plot](./img/plot.png)
 
-위와 같은 과정을 거쳐 lagging 현상이 모두 사라진 것은 아니지만 다소 줄어든 결과를 보였습니다.
+위와 같은 과정을 거쳐 lagging 현상이 모두 사라진 것은 아니지만 다소 줄어든 결과를 보였습니다.processing
+![data](C:\Users\kbj20\OneDrive\바탕 화면/data.PNG)
+
+<!--stackedit_data:
+eyJoaXN0b3J5IjpbLTE0MDQwMDk0MjJdfQ==
+-->
