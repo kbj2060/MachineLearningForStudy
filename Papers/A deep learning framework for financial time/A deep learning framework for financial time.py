@@ -17,23 +17,6 @@ import plotly.graph_objects as go
 import tensorflow as tf
 import os
 
-'''
-requirements.txt
-	pandas~=1.0.3
-	pyqt5~=5.15.0
-	rootpath~=0.1.1
-	numpy~=1.18.4
-	plotly~=4.7.1
-	tensorflow~=2.1.0
-	dtw~=1.4.0
-	scikit-learn~=0.23.1
-	requests~=2.23.0
-	beautifulsoup4~=4.9.1
-	tqdm~=4.46.1
-	keras~=2.3.1
-	setuptools~=46.4.0
-	statsmodels~=0.11.1
-'''
 
 # seed 를 고정시켜 저장한 모델을 다시 불러와도 같은 값이 나오도록 합니다.
 seed_value= 0
