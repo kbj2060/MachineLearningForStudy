@@ -36,4 +36,7 @@ Bayesian Optimization에는 두 가지 필수 요소가 존재한다. 먼저 **S
 
 ![con](http://research.sualab.com/assets/images/bayesian-optimization-overview-1/bayesian-optimization-process.gif)
 
-​	구간 [0.01,0.09][0.01,0.09]에서 최초 3개(n=3n=3), 총 11개(N=11N=11)의 점에 대한 반복 조사 결과니다. 처음 무작위로 점 3개를 두어 Surrogate Model로 함수의 형태를 예측하고,  Acquisition Fuction을 이용해 다음 최적화 값을 구하는 과정이라고 할 수 있다. 
+구간 [0.01,0.09][0.01,0.09]에서 최초 3개(n=3n=3), 총 11개(N=11N=11)의 점에 대한 반복 조사 결과니다. 처음 무작위로 점 3개를 두어 Surrogate Model로 함수의 형태를 예측하고,  Acquisition Fuction을 이용해 다음 최적화 값을 구하는 과정이라고 할 수 있다. 
+
+#### 참조
+http://research.sualab.com/introduction/practice/2019/02/19/bayesian-optimization-overview-1.html
